@@ -3,7 +3,7 @@ use log::{debug, trace};
 use serde::{Serialize, Deserialize};
 use serde_json::{json, Value};
 use super::TwAPI;
-use anyhow::{Result, bail};
+use anyhow::{Result, bail, Context};
 
 const SEARCH_URL: &str =
     "https://twitter.com/i/api/graphql/9zwVLJ48lmVUk8u_Gh9DmA/ProfileSpotlightsQuery";
@@ -70,7 +70,7 @@ fn find_object(data: Vec<Value>, key_start_with: &str, value_start_with: &str) -
 }
 
 impl TwAPI {
-    pub async fn user_id(&mut self, username: String) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn user_id(&mut self, username: String) -> Result<String> {
         let username = username.replace("@", "");
         if username.as_bytes()[0].is_ascii_digit() {
             return Ok(username);
@@ -99,23 +99,23 @@ impl TwAPI {
             debug!("me res {res}");
             let rest_id = res
                 .get("data")
-                .ok_or("data")?
+                .context("data")?
                 .get("viewer")
-                .ok_or("viewer")?
+                .context("viewer")?
                 .get("user_results")
-                .ok_or("user resulsts")?
+                .context("user resulsts")?
                 .get("result")
-                .ok_or("result")?
+                .context("result")?
                 .get("rest_id")
-                .ok_or("rest id")?
+                .context("rest id")?
                 .as_str()
-                .ok_or("convert to str failed for rest id")?
+                .context("convert to str failed for rest id")?
                 .to_string();
             return Ok(rest_id);
         }
     }
 
-    pub async fn get_friends(&mut self, user_id: i64, following: bool, start_cursor: Option<String>) -> Result<PaginationResponse, Box<dyn std::error::Error>> {
+    pub async fn get_friends(&mut self, user_id: i64, following: bool, start_cursor: Option<String>) -> Result<PaginationResponse> {
         let variables = json!(
             {"userId": user_id, "count": 2,
                  "includePromotedContent": true, "cursor": start_cursor, "product": "latest"}
@@ -156,7 +156,7 @@ impl TwAPI {
         let entries = findkey("entries", instructions.to_owned()).unwrap_or_default();
         let entries = entries
             .as_array()
-            .ok_or_else(|| "entries is not an array or not present".to_string())?;
+            .context("entries is not an array or not present")?;
 
         let bottom_cursor = find_object(entries.to_owned(), "entryId", "cursor-bottom").unwrap_or_default();
         let bottom_cursor = bottom_cursor["content"]["value"].as_str().unwrap_or_default();

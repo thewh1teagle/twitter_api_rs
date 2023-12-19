@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use log::debug;
 use twitter_rs_api::{self, auth::SuspiciousLoginError};
 use dotenv::dotenv;
+use anyhow::Result;
 
 fn read_string() -> String {
     let mut input = String::new();
@@ -13,7 +14,7 @@ fn read_string() -> String {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     dotenv().ok(); 
 
     let cookies_path = PathBuf::from("cookies.json");

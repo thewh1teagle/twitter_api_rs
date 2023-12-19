@@ -42,14 +42,14 @@ impl TwAPI {
 
     }
 
-    pub async fn me_rest_id(&mut self) -> Result<i64, Box<dyn std::error::Error>> {
+    pub async fn me_rest_id(&mut self) -> Result<i64> {
         let me = self.me().await?;
         let res_id = me
-            .get("data").ok_or("data")?
-            .get("viewer").ok_or("viewer")?
-            .get("user_results").ok_or("viewer")?
-            .get("result").ok_or("viewer")?
-            .get("rest_id").ok_or("rest id")?.as_str().ok_or("str error")?.parse::<i64>()?;
+            .get("data").context("data")?
+            .get("viewer").context("viewer")?
+            .get("user_results").context("viewer")?
+            .get("result").context("viewer")?
+            .get("rest_id").context("rest id")?.as_str().context("str error")?.parse::<i64>()?;
         Ok(res_id)
         
     }
